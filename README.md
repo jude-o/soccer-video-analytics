@@ -1,58 +1,147 @@
 # Soccer Video Analytics
 
-
-This repository contains the companion code of the blog post [Automatically measuring soccer ball possession with AI and video analytics](https://tryolabs.com/blog/2022/10/17/measuring-soccer-ball-possession-ai-video-analytics) by [Tryolabs](https://tryolabs.com).
+This repository contains the companion code for automated soccer video analysis, featuring ball possession tracking, pass detection, and team classification using AI and computer vision techniques.
 
 <a href="https://www.youtube.com/watch?v=CWnlGBVaRpQ" target="_blank">
 <img src="https://user-images.githubusercontent.com/33181424/193869946-ad7e3973-a28e-4640-8494-bf899d5df3a7.png" width="60%" height="50%">
 </a>
 
-For further information on the implementation, please check out the post.
+The system uses YOLO object detection models to identify players and balls, HSV-based jersey classification for team assignment, and advanced tracking algorithms to analyze game dynamics in real-time.
 
-## How to install
+## Contributors
+
+**Mohamed Emam** - Enhanced the original implementation with significant improvements:
+- **add trained model**: Adding models for detecting the ball and players
+- **Custom model support**: Added compatibility for custom-trained ball and player detection models
+- **Flexible label configuration**: Implemented support for different YOLO model labels (not limited to default "ball" and "person")
+- **Enhanced color customization**: Added comprehensive team color configuration for UI elements and rectangles
+- **Improved video compatibility**: Added arguments for different image sizes, confidence thresholds, and model paths to work with any video
+- **Robust model integration**: Fixed compatibility issues with newer YOLO model versions
+
+*Based on the original work by [Tryolabs](https://tryolabs.com) from their blog post [Automatically measuring soccer ball possession with AI and video analytics](https://tryolabs.com/blog/2022/10/17/measuring-soccer-ball-possession-ai-video-analytics).*
+
+## Features
+
+- **Ball possession tracking** with visual possession counter
+- **Pass detection and counting** with trajectory visualization
+- **Team classification** based on jersey colors using HSV filtering
+- **Multi-object tracking** with motion compensation
+- **Customizable team colors and names** for display
+- **Flexible model configuration** for different detection scenarios
+- **Custom model support** for both ball and player detection
+- **Configurable YOLO labels** for different trained models
+- **Enhanced video compatibility** with adjustable parameters
+
+## Installation
 
 To install the necessary dependencies we use [Poetry](https://python-poetry.org/docs). After you have it installed, follow these instructions:
 
 1. Clone this repository:
-
    ```bash
-   git clone git@github.com:tryolabs/soccer-video-analytics.git
+   git clone git@github.com/tryolabs/soccer-video-analytics.git
    ```
 
 2. Install the dependencies:
-
    ```bash
    poetry install
    ```
 
-3. Optionally, download the ball.pt file [from the GitHub release](https://github.com/tryolabs/soccer-video-analytics/releases/tag/v0). Please note that this is just a toy model that overfits to a few videos, not a robust ball detection model.
+3. Optionally, download pre-trained models:
+   - Ball detection model: `ball_tracking_model.pt`
+   - Player detection model: `player_tracking_model.pt`
 
-## How to run
+## Usage
 
 First, make sure to initialize your environment using `poetry shell`.
 
-To run one of the applications (possession computation and passes counter) you need to use flags in the console.
+### Command Line Arguments
 
-These flags are defined in the following table:
+| Argument                    | Description                                        | Default Value                 |
+|----------------------------|----------------------------------------------------|------------------------------ |
+| `--video`                  | Path to the input video                            | `videos/soccer_possession.mp4` |
+| `--ball_detection_model`   | Path to the ball detection model (.pt format)     | `None` (uses default YOLOv5)  |
+| `--player_detection_model` | Path to the player detection model (.pt format)   | `None` (uses default YOLOv5)  |
+| `--passes`                 | Enable pass detection (flag)                       | `False`                       |
+| `--possession`             | Enable possession counter (flag)                   | `False`                       |
+| `--ball_label`             | Set ball label in YOLO model                       | `ball`                        |
+| `--player_label`           | Set player label in YOLO model                     | `person`                      |
+| `--player_image_size`      | Image size for player detection                    | `640`                         |
+| `--ball_image_size`        | Image size for ball detection                      | `640`                         |
+| `--player_confidence`      | Confidence threshold for player detection          | `0.5`                         |
+| `--ball_confidence`        | Confidence threshold for ball detection            | `0.5`                         |
+| `--first_team`             | First team name                                    | `Chelsea`                     |
+| `--second_team`            | Second team name                                   | `Man City`                    |
+| `--first_team_short`       | First team short name (auto-generated if not set) | `None`                        |
+| `--second_team_short`      | Second team short name (auto-generated if not set)| `None`                        |
+| `--first_team_color_text`       | First team color in RGB format (comma-separated)  | `255,0,0`                     |
+| `--second_team_color_text`      | Second team color in RGB format (comma-separated) | `240,230,188`                 |
+| `--first_jesry_color`      | First team jersey color name for classification   | `blue`                        |
+| `--second_jesry_color`     | Second team jersey color name for classification  | `white`                       |
+| `--output`                 | Path to the output video file                      | `output_video.mp4`            |
 
-| Argument | Description | Default value |
-| ----------- | ----------- | ----------- |
-| application | Set it to `possession` to run the possession counter or `passes` if you like to run the passes counter | None, but mandatory |
-| path-to-the-model | Path to the soccer ball model weights (`pt` format) | `/models/ball.pt` |
-| path-to-the-video | Path to the input video | `/videos/soccer_possession.mp4` |
+### Basic Usage
 
-The following command shows you how to run this project.
-
-```
-python run.py --<application> --model <path-to-the-model> --video <path-to-the-video>
-```
-
->__Warning__: You have to run this command on the root of the project folder.
-
-Here is an example on how to run the command:
-    
 ```bash
-python run.py --possession --model models/ball.pt --video videos/soccer_possession.mp4
+python run.py --possession --video <path-to-video>
 ```
 
-An mp4 video will be generated after the execution. The name is the same as the input video with the suffix `_out` added.
+### Advanced Example
+
+```bash
+python run.py \
+    --possession \
+    --passes \
+    --video /path/to/input/video.mp4 \
+    --output /path/to/output/processed.mp4 \
+    --ball_detection_model models/ball_tracking_model.pt \
+    --player_detection_model models/player_tracking_model.pt \
+    --player_label player \
+    --ball_label ball \
+    --first_team "Barcelona" \
+    --second_team "Real Madrid" \
+    --first_team_short FCB \
+    --second_team_short RMD \
+    --first_jesry_color "blue,red" \
+    --second_jesry_color "white" \
+    --first_team_color "0,0,255" \
+    --second_team_color "255,255,255" \
+    --player_image_size 1280 \
+    --ball_image_size 3840 \
+    --player_confidence 0.2 \
+    --ball_confidence 0.0
+```
+
+### Jersey Color Classification
+
+The system supports multiple jersey colors per team. Use comma-separated color names for teams with multiple jersey colors:
+
+- Single color: `--first_jesry_color "blue"`
+- Multiple colors: `--first_jesry_color "blue,red"`
+
+Supported color names include: `blue`, `red`, `white`, `black`, `yellow`, `green`, etc.
+
+### Model Configuration
+
+- **Default models**: If no model paths are specified, the system uses default YOLOv5 models
+- **Custom models**: Provide paths to your trained `.pt` model files
+- **Image sizes**: Larger image sizes (1280, 3840) provide better detection accuracy but slower processing
+- **Confidence thresholds**: Lower values (0.0-0.2) capture more detections but may include false positives
+
+## Output
+
+The processed video will be saved to the specified output path with:
+- Player tracking with team colors and IDs
+- Ball trajectory visualization
+- Possession counter (if enabled)
+- Pass detection and counting (if enabled)
+
+> **Warning**: Make sure to run commands from the root of the project folder.
+
+## Technical Details
+
+The system employs several advanced techniques:
+- **YOLOv5** for object detection
+- **HSV color space filtering** for jersey classification
+- **Norfair tracking** with motion compensation
+- **Inertia-based classification** to maintain consistent team assignments
+- **Multi-object tracking** with configurable distance thresholds
